@@ -70,6 +70,20 @@ void stampa(tree* t){
 
 /*** inizio funzioni per addent ***/
 int add_entity(char* name, tree** primary_tree){
+
+
+  tree* y = NULL;
+  tree* x = *primary_tree;
+  while(x != NULL){
+    y = x;
+    if (strcmp (name, x->name) == 0){
+      return 0;
+    }
+    if (compare(name, x->name) == 0)
+      x = x->left;
+    else
+      x = x->right;
+  }
   tree* z;
   z = malloc(sizeof(tree));
   z->left = NULL;
@@ -80,20 +94,6 @@ int add_entity(char* name, tree** primary_tree){
     z->relation_name[i] = NULL;
   }
   strcpy(z->name, name);
-
-  tree* y = NULL;
-  tree* x = *primary_tree;
-  while(x != NULL){
-    y = x;
-    if (strcmp (name, x->name) == 0){
-      free(z);
-      return 0;
-    }
-    if (compare(name, x->name) == 0)
-      x = x->left;
-    else
-      x = x->right;
-  }
   z->p = y;
   if (y == NULL)
     (*primary_tree) = z;
@@ -148,18 +148,13 @@ list* find_relation_global(char rel[], list** lista){
 }
 
 int relation_tree_insert(relation_tree** tr, tree* id){
-  relation_tree* z;
-  z = malloc(sizeof(relation_tree));
-  z->left = NULL;
-  z->right = NULL;
-  z->id = id;
+
 
   relation_tree* y = NULL;
   relation_tree* x = *tr;
   while(x != NULL){
     y = x;
     if (strcmp (id->name, x->id->name) == 0){
-      free(z);
       return 0;
     }
     if (compare(id->name, x->id->name) == 0)
@@ -167,6 +162,11 @@ int relation_tree_insert(relation_tree** tr, tree* id){
     else
       x = x->right;
   }
+  relation_tree* z;
+  z = malloc(sizeof(relation_tree));
+  z->left = NULL;
+  z->right = NULL;
+  z->id = id;
   z->p = y;
   if (y == NULL)
     *tr = z;
@@ -178,18 +178,11 @@ int relation_tree_insert(relation_tree** tr, tree* id){
 }
 
 int add_to_maxlist(tree* id, max_list** position){
-  max_list* z;
-  z = malloc(sizeof(max_list));
-  z->left = NULL;
-  z->right = NULL;
-  z->id = id;
-
-  max_list* y = NULL;
+    max_list* y = NULL;
   max_list* x = *position;
   while(x != NULL){
     y = x;
     if (strcmp (id->name, x->id->name) == 0){
-      free(z);
       return 0;
     }
     if (compare(id->name, x->id->name) == 0)
@@ -197,6 +190,11 @@ int add_to_maxlist(tree* id, max_list** position){
     else
       x = x->right;
   }
+  max_list* z;
+  z = malloc(sizeof(max_list));
+  z->left = NULL;
+  z->right = NULL;
+  z->id = id;
   z->p = y;
   if (y == NULL)
     *position = z;
@@ -209,19 +207,10 @@ int add_to_maxlist(tree* id, max_list** position){
 
 int clear_maxlist(max_list** position){
   if(*position != NULL){
-    max_list** left = &((*position)->left);
-    max_list** right = &((*position)->right);
-    free(*position);
-    *position = NULL;
-    clear_maxlist(left);
-    clear_maxlist(right);
-  }
-  /*
-  if((*position) != NULL){
     clear_maxlist(&((*position)->left));
     clear_maxlist(&((*position)->right));
     free(*position);
-  }*/
+  }
 }
 
 void add_in_relation_tree(tree* id1, tree* id2, char rel[], list** position){
@@ -231,15 +220,15 @@ void add_in_relation_tree(tree* id1, tree* id2, char rel[], list** position){
       i++;
   }
   if (id2->relation_name[i] == NULL){
-    id2->relation_name[i] = malloc(sizeof(NAME));
-    strcpy(id2->relation_name[i], rel);
+    (id2->relation_name)[i] = malloc(sizeof(char)*(strlen(rel)+1));
+    strcpy((id2->relation_name)[i], rel);
     pos = i;
   }
-
   if(id2->relation_name[i] != NULL && strcmp(id2->relation_name[i], rel) == 0){
     pos = i;
   }
   int res = relation_tree_insert( &(id2->relation[i]), id1);
+
   if (res == 1){
     id2->occorrenze[pos]++;
     if (id2->occorrenze[pos]==(*position)->num_relation){
@@ -248,6 +237,7 @@ void add_in_relation_tree(tree* id1, tree* id2, char rel[], list** position){
     if (id2->occorrenze[pos]>(*position)->num_relation){
       (*position)->num_relation = id2->occorrenze[pos];
       clear_maxlist((&(*position)->max_lista));
+      (*position)->max_lista=NULL;
       add_to_maxlist(id2, (&(*position)->max_lista));
     }
   }
@@ -323,29 +313,31 @@ int main(){
 
   list* lista_relazioni;
   lista_relazioni = NULL;
+  int cc;
 
   while(1){
-    scanf("%s", line);
+
+    cc = scanf("%s", line);
     if (strncmp(line, "addent", 6) == 0){
 
-      scanf("%s", name1);
+      cc = scanf("%s", name1);
       add_entity(name1, &primary_tree);
     }
     if (strncmp(line, "addrel", 6) == 0){
-      scanf("%s", name1);
-      scanf("%s", name2);
-      scanf("%s", relation);
+      cc = scanf("%s", name1);
+      cc = scanf("%s", name2);
+      cc = scanf("%s", relation);
       add_relation(name1, name2, relation, &lista_relazioni, primary_tree);
     }
     if (strncmp(line, "delent", 6) == 0){
       char name1[NAME];
-      scanf("%s", name1);
+      cc = scanf("%s", name1);
       //del_entity(name1);
     }
     if (strncmp(line, "delrel", 6) == 0){
-      scanf("%s", name1);
-      scanf("%s", name2);
-      scanf("%s", relation);
+      cc = scanf("%s", name1);
+      cc = scanf("%s", name2);
+      cc = scanf("%s", relation);
       //del_relation(name1, name2, relation);
     }
     if (strncmp(line, "report", 6) == 0){
@@ -353,15 +345,8 @@ int main(){
         printf("none\n");
       else
         mostra(lista_relazioni);
-      //report(relation_name, primary_tree);
     }
     if (strncmp(line, "end", 3) == 0){
-      /*
-      report(lista_relazioni, primary_tree);
-      stampa(primary_tree);
-      printf("\n\n");
-      printf("rel1: %s, rel2: %s, rel3: %s\n\n", relation_name[0], relation_name[1], relation_name[2]);
-      */
       exit(0);
     }
   }
