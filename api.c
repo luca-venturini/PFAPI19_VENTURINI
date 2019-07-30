@@ -2,17 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define LINE_LENGTH 7
-#define MAX_RELATION 20
-#define NAME 200
+#define LINE_LENGTH 35
+#define MAX_RELATION 30
+#define NAME 256
 
 struct list_t;
 struct primary_tree_t;
 
+int rr = 1;
 typedef struct list_t list;
 typedef struct primary_tree_t tree;
 typedef struct relation_tree_t relation_tree;
 typedef struct max_l_t max_list;
+int counter = 0;
 struct max_l_t{
   struct max_l_t* p;
   tree* id;
@@ -22,13 +24,14 @@ struct max_l_t{
 
 struct list_t{
   char relation[NAME];
-  int num_relation;
+  short unsigned num_relation;
   max_list* max_lista;
   struct list_t* next;
 };
 
 struct relation_tree_t{
   struct relation_tree_t* p;
+  char color;
   tree* id;
   struct relation_tree_t* left;
   struct relation_tree_t* right;
@@ -39,7 +42,8 @@ struct primary_tree_t{
   char name[NAME];
   relation_tree* relation[MAX_RELATION];
   char *relation_name[MAX_RELATION];
-  int occorrenze[MAX_RELATION];
+  short unsigned occorrenze[MAX_RELATION];
+  char color;
   struct primary_tree_t* left;
   struct primary_tree_t* right;
 };
@@ -63,7 +67,6 @@ int compare(char a[], char b[]){
   return 0;
 }
 
-/*
 void stampa(tree* t){
   if (t != NULL){
     stampa(t->left);
@@ -78,18 +81,181 @@ void stampa_lista(list *l){
     l=l->next;
   }
 }
-*/
+
 
 /*** inizio funzioni per addent ***/
+void left_rotate(tree** root, tree* x){
+  tree* y;
+  y = x->right;
+  x->right = y->left;
+
+  if(y->left != NULL)
+    y->left->p = x;
+  y->p = x->p;
+  if(x->p == NULL)
+    *root = y;
+  else if(x == x->p->left)
+    x->p->left = y;
+  else
+    x->p->right = y;
+  y->left = x;
+  x->p = y;
+}
+
+void left_rotate_relation(relation_tree** root, relation_tree* x){
+  relation_tree* y;
+  y = x->right;
+  x->right = y->left;
+
+  if(y->left != NULL)
+    y->left->p = x;
+  y->p = x->p;
+  if(x->p == NULL)
+    *root = y;
+  else if(x == x->p->left)
+    x->p->left = y;
+  else
+    x->p->right = y;
+  y->left = x;
+  x->p = y;
+}
+
+void right_rotate(tree** root, tree* x){
+  tree* y;
+  y = x->left;
+  x->left = y->right;
+
+  if(y->right != NULL)
+    y->right->p = x;
+  y->p = x->p;
+  if(x->p == NULL)
+    *root = y;
+  else if(x == x->p->left)
+    x->p->left = y;
+  else
+    x->p->right = y;
+  y->right = x;
+  x->p = y;
+}
+
+void right_rotate_relation(relation_tree** root, relation_tree* x){
+  relation_tree* y;
+  y = x->left;
+  x->left = y->right;
+
+  if(y->right != NULL)
+    y->right->p = x;
+  y->p = x->p;
+  if(x->p == NULL)
+    *root = y;
+  else if(x == x->p->left)
+    x->p->left = y;
+  else
+    x->p->right = y;
+  y->right = x;
+  x->p = y;
+}
+
+void rb_insert_fixup(tree** root, tree* z){
+  tree* y;
+  tree* x;
+  while(z->p != NULL && z->p->p != NULL && z->p->color == 1){
+    if(z->p == z->p->p->left){
+      y = z->p->p->right;
+      if(y != NULL && y->color == 1){
+        z->p->color = 0;
+        y->color = 0;
+        z->p->p->color = 1;
+        z = z->p->p;
+      }
+      else{
+        if(z == z->p->right){
+          z = z->p;
+          left_rotate(root, z);
+        }
+        z->p->color = 0;
+        z->p->p->color = 1;
+        right_rotate(root, z->p->p);
+      }
+    }
+    else{
+      y = z->p->p->left;
+      if(y != NULL && y->color == 1){
+        z->p->color = 0;
+        y->color = 0;
+        z->p->p->color = 1;
+        z = z->p->p;
+      }
+      else{
+        if(z == z->p->left){
+          z = z->p;
+          right_rotate(root, z);
+        }
+        z->p->color = 0;
+        z->p->p->color = 1;
+        left_rotate(root, z->p->p);
+      }
+    }
+  }
+  (*root)->color = 0;
+}
+
+
+void rb_insert_fixup_relation(relation_tree** root, relation_tree* z){
+  relation_tree* y;
+  relation_tree* x;
+  while(z->p != NULL && z->p->p != NULL && z->p->color == 1){
+    if(z->p == z->p->p->left){
+      y = z->p->p->right;
+      if(y != NULL && y->color == 1){
+        z->p->color = 0;
+        y->color = 0;
+        z->p->p->color = 1;
+        z = z->p->p;
+      }
+      else{
+        if(z == z->p->right){
+          z = z->p;
+          left_rotate_relation(root, z);
+        }
+        z->p->color = 0;
+        z->p->p->color = 1;
+        right_rotate_relation(root, z->p->p);
+      }
+    }
+    else{
+      y = z->p->p->left;
+      if(y != NULL && y->color == 1){
+        z->p->color = 0;
+        y->color = 0;
+        z->p->p->color = 1;
+        z = z->p->p;
+      }
+      else{
+        if(z == z->p->left){
+          z = z->p;
+          right_rotate_relation(root, z);
+        }
+        z->p->color = 0;
+        z->p->p->color = 1;
+        left_rotate_relation(root, z->p->p);
+      }
+    }
+  }
+  (*root)->color = 0;
+}
+
 int add_entity(char* name, tree** primary_tree){
   tree* y = NULL;
   tree* x = *primary_tree;
+  int lungh;
   while(x != NULL){
+    lungh = strcmp (name, x->name);
     y = x;
-    if (strcmp (name, x->name) == 0){
+    if (lungh == 0){
       return 0;
     }
-    if (compare(name, x->name) == 0)
+    if (lungh < 0)
       x = x->left;
     else
       x = x->right;
@@ -107,10 +273,12 @@ int add_entity(char* name, tree** primary_tree){
   z->p = y;
   if (y == NULL)
     (*primary_tree) = z;
-  else if (compare(name, y->name) == 0)
+  else if (strcmp(name, y->name) < 0)
     y->left = z;
   else
     y->right = z;
+  z->color = 1;
+  rb_insert_fixup(primary_tree, z);
   return 1;
 }
 
@@ -120,10 +288,11 @@ tree* find_id(char id[], tree* x){
   if(x == NULL){
     return NULL;
   }
-  if( strcmp(id, x->name) == 0){
+  int lungh = strcmp(id, x->name);
+  if( lungh == 0){
     return x;
   }
-  if(compare(id, x->name)==0)
+  if(lungh < 0)
     return find_id(id, x->left);
   else
     return find_id(id, x->right);
@@ -135,7 +304,7 @@ list* find_relation_global(char rel[], list** lista){
   list* temp_prev;
   temp_prev = NULL;
   temp = *lista;
-  while( temp != NULL && compare(temp->relation, rel) == 0 && strcmp(temp->relation, rel) != 0){
+  while( temp != NULL && strcmp(temp->relation, rel) < 0){
     temp_prev = temp;
     temp = temp->next;
   }
@@ -146,6 +315,7 @@ list* find_relation_global(char rel[], list** lista){
   n = malloc(sizeof(list));
   strcpy(n->relation, rel);
   n->num_relation = 0;
+  n->max_lista = NULL; /********** agginuta riga per evitare memory leak**/
   if(temp != NULL)
     n->next = temp;
   else
@@ -162,12 +332,14 @@ list* find_relation_global(char rel[], list** lista){
 int relation_tree_insert(relation_tree** tr, tree* id){
   relation_tree* y = NULL;
   relation_tree* x = *tr;
+  int lungh;
   while(x != NULL){
+    lungh = strcmp (id->name, x->id->name);
     y = x;
-    if (strcmp (id->name, x->id->name) == 0){
+    if (lungh == 0){
       return 0;
     }
-    if (compare(id->name, x->id->name) == 0)
+    if (lungh < 0)
       x = x->left;
     else
       x = x->right;
@@ -180,22 +352,26 @@ int relation_tree_insert(relation_tree** tr, tree* id){
   z->p = y;
   if (y == NULL)
     *tr = z;
-  else if (compare(id->name, y->id->name) == 0)
+  else if (strcmp(id->name, y->id->name) < 0)
     y->left = z;
   else
     y->right = z;
+  z->color = 1;
+  rb_insert_fixup_relation(tr, z);
   return 1;
 }
 
 int add_to_maxlist(tree* id, max_list** position){
   max_list* y = NULL;
   max_list* x = *position;
+  int lungh;
   while(x != NULL){
+    lungh = strcmp (id->name, x->id->name);
     y = x;
-    if (strcmp (id->name, x->id->name) == 0){
+    if (lungh == 0){
       return 0;
     }
-    if (compare(id->name, x->id->name) == 0)
+    if (lungh < 0)
       x = x->left;
     else
       x = x->right;
@@ -208,19 +384,19 @@ int add_to_maxlist(tree* id, max_list** position){
   z->p = y;
   if (y == NULL)
     *position = z;
-  else if (compare(id->name, y->id->name) == 0)
+  else if (strcmp(id->name, y->id->name) < 0)
     y->left = z;
   else
     y->right = z;
   return 1;
 }
 
-int clear_maxlist(max_list** position){
-  if(*position != NULL){
-    clear_maxlist(&((*position)->left));
-    clear_maxlist(&((*position)->right));
-    free(*position);
-  }
+void clear_maxlist(max_list* position){
+  if(position == NULL)
+    return;
+  clear_maxlist(position->left);
+  clear_maxlist(position->right);
+  free(position);
 }
 
 void add_in_relation_tree(tree* id1, tree* id2, char rel[], list** position){
@@ -259,7 +435,7 @@ void add_in_relation_tree(tree* id1, tree* id2, char rel[], list** position){
     }
     if (id2->occorrenze[pos]>(*position)->num_relation){
       (*position)->num_relation = id2->occorrenze[pos];
-      clear_maxlist((&(*position)->max_lista));
+      clear_maxlist(((*position)->max_lista));
       (*position)->max_lista=NULL;
       add_to_maxlist(id2, (&(*position)->max_lista));
     }
@@ -279,8 +455,6 @@ int add_relation(char name1[], char name2[], char rel[], list** lista_relazioni,
 }
 
 /*** inizio funzioni per report ***/
-
-/*
 void stampa_relation(relation_tree* t){
   if (t != NULL){
     stampa_relation(t->left);
@@ -312,7 +486,6 @@ void report(list* lista, tree* primary_tree){
     lista = lista->next;
   }
 }
-*/
 
 void stampa_albero(max_list* t){
   if (t != NULL){
@@ -443,8 +616,7 @@ void cancella_in_sottoalberi(tree* root, tree* tr, tree* z, list **lista){
     cancella_in_sottoalberi(root, tr->left, z, lista);
     cancella_in_sottoalberi(root, tr->right, z, lista);
     int res, result;
-
-    for(int i = 0; i<MAX_RELATION ; i++){
+    for(int i = 0; i<MAX_RELATION; i++){
       if(tr->relation[i] != NULL && strcmp(tr->relation_name[i], "deleted") != 0){
         result = cancella_id_da_relazioni(&(tr->relation[i]), z);
         if (result != -1){
@@ -480,7 +652,7 @@ void cancella_in_sottoalberi(tree* root, tree* tr, tree* z, list **lista){
           free(tr->relation_name[i]);
           tr->relation_name[i] = malloc(sizeof(char)*8);
           strcpy(tr->relation_name[i],"deleted");
-          tr->occorrenze[i]=0;
+          tr->occorrenze[i] = 0;
           tr->relation[i] = NULL;
         }
       }
@@ -503,7 +675,6 @@ max_list* cerca_in_max_albero(max_list* m_lista, tree* z){
   }
   return NULL;
 }
-
 
 max_list* tree_minimum_max_list(max_list* x){
   while(x->left != NULL){
@@ -536,7 +707,6 @@ void transplant_max_list(max_list **root, max_list* u, max_list* v){
   }
 }
 
-
 int rimuovi(max_list* id_max_lista, max_list** root, list* elem, list** lista){
   max_list* y;
   max_list* z;
@@ -559,7 +729,6 @@ int rimuovi(max_list* id_max_lista, max_list** root, list* elem, list** lista){
     y->left->p = y;
   }
   free(z);
-
   if ( (*root == NULL) && (elem->num_relation != 1) )
     return 0;
   if(*root != NULL)
@@ -631,7 +800,6 @@ int ricarica_lista(tree* root, list* elem, tree* z){
   return 0;
 }
 
-
 void aggiorna_lista_massimi(tree* root, list** lista, tree* z){
   list* temp = *lista;
   list* prev = NULL;
@@ -639,6 +807,7 @@ void aggiorna_lista_massimi(tree* root, list** lista, tree* z){
   int res;
   while(temp != NULL){
     max_list* id_max_lista = cerca_in_max_albero(temp->max_lista, z);
+    rr++;
     if (id_max_lista != NULL){
       res = rimuovi(id_max_lista, &(temp->max_lista), temp, lista);
       if (res == 0){
@@ -664,7 +833,6 @@ void aggiorna_lista_massimi(tree* root, list** lista, tree* z){
   }
 }
 
-/*
 void stampa_id_relazioni_test(relation_tree* rel_name, int* co){
   if(rel_name != NULL){
     stampa_id_relazioni_test(rel_name->left, co);
@@ -691,22 +859,150 @@ void stampa_sottoalberi_test(tree* t){
     stampa_sottoalberi_test(t->right);
   }
 }
-*/
+
+relation_tree* cerca(relation_tree* root, tree* z){
+  while(root != NULL){
+    if(strcmp(root->id->name, z->name) == 0)
+      return root;
+    if(compare( z->name, root->id->name ) == 0)
+      root = root->left;
+    else
+      root = root->right;
+  }
+  return NULL;
+}
+
+void ispection(tree* root, tree* z){
+  relation_tree* pp;
+  if(root != NULL){
+
+    for(int i = 0; i<MAX_RELATION && root->relation_name[i] != NULL; i++){
+      pp = cerca(root->relation[i], z);
+      if(pp != NULL)
+        printf("eee %s eee\n", pp->id->name);
+    }
+    ispection(root->left, z);
+    ispection(root->right, z);
+  }
+}
+
+void rb_delete_fixup(tree** root, tree* x){
+  tree *w;
+  while(x != *root && (x == NULL || x->color == 0) ){
+    if(x == x->p->left){
+      w = x->p->right;
+      if(w != NULL && w->color == 1){
+        w->color = 0;
+        x->p->color = 1;
+        left_rotate(root, x->p);
+        w = x->p->right;
+      }
+      if(w != NULL && (w->left==NULL || w->left->color == 0) && (w->right==NULL || w->right->color == 0) ){
+        w->color = 1;
+        x = x->p;
+      }
+      else{
+        if(w != NULL && (w->right == NULL || w->right->color == 0) ){
+          if (w->left != NULL)
+            w->left->color = 0;
+          w->color = 1;
+          right_rotate(root, w);
+          w = x->p->right;
+        }
+        if(w != NULL)
+          w->color = x->p->color;
+        x->p->color = 0;
+        if(w != NULL && w->right != NULL)
+          w->right->color = 0;
+        left_rotate(root, x->p);
+        x = (*root);
+      }
+    }
+    else{
+      w = x->p->left;
+      if(w != NULL && w->color == 1){
+        w->color = 0;
+        x->p->color = 1;
+        right_rotate(root, x->p);
+        w = x->p->left;
+      }
+      if(w != NULL && (w->left==NULL || w->left->color == 0) && (w->right==NULL || w->right->color == 0) ){
+        w->color = 1;
+        x = x->p;
+      }
+      else{
+        if(w != NULL && (w->left == NULL || w->left->color == 0) ){
+          if (w->right != NULL)
+            w->right->color = 0;
+          w->color = 1;
+          left_rotate(root, w);
+          w = x->p->left;
+        }
+        if(w != NULL)
+          w->color = x->p->color;
+        x->p->color = 0;
+        if(w != NULL && w->left != NULL)
+          w->left->color = 0;
+        right_rotate(root, x->p);
+        x = (*root);
+      }
+    }
+  }
+  if(x != NULL)
+    x->color = 0;
+}
+
+
+/*eliminare il sottoalbero legato al nodo che cancello***/
+void elimina_sottoalbero(relation_tree* x){
+  if(x == NULL)
+    return;
+  elimina_sottoalbero(x->left);
+  elimina_sottoalbero(x->right);
+  free(x);
+}
+
+void cancella_sottoalbero(tree* x){
+  /*
+  for(int i = 0; i<MAX_RELATION; i++){
+    free(x->relation_name[i]);
+    x->relation_name[i]=NULL;
+  }*/
+  for(int i = 0; i<MAX_RELATION; i++){
+    elimina_sottoalbero(x->relation[i]);
+    x->relation[i] = NULL;
+  }
+
+}
+
+/*** fine ***/
 
 void del_entity(char name[], tree** root, list** lista){
   tree* z = find_id(name, *root);
+  tree* y;
+  tree* x;
   if (z == NULL)
     return;
-  tree* y;
+  y = z;
+  char original_color = y->color;
   if (z->left == NULL){
+    x = z->right;
     transplant(root, z, z->right);
   }
   else if(z->right == NULL){
+    x = z->left;
     transplant(root, z, z->left);
   }
   else{
     y = tree_minimum(z->right);
-    if (y->p != z){
+    original_color = y->color;
+    x = y->right;
+    if (y->p == z){
+      if(x != NULL){
+        x->p = y;
+      }
+    }
+    else{
       transplant(root, y, y->right);
       y->right = z->right;
       y->right->p = y;
@@ -714,9 +1010,18 @@ void del_entity(char name[], tree** root, list** lista){
     transplant(root, z, y);
     y->left = z->left;
     y->left->p = y;
+    y->color = z->color;
+  }
+  if(original_color == 0){
+    //rb_delete_fixup(root, x);
   }
   cancella_in_sottoalberi(*root, *root, z, lista);
   aggiorna_lista_massimi(*root, lista, z);
+  for(int i = 0; i<MAX_RELATION && z->relation_name[i] != NULL; i++){
+    free(z->relation_name[i]);
+    z->relation_name[i] = NULL;
+  }
+  cancella_sottoalbero(z);
   free(z);
 }
 
@@ -727,7 +1032,6 @@ void print_tree(tree* tre){
     print_tree(tre->right);
   }
 }
-
 /*** inizio funzioni per delrel ***/
 relation_tree* cerca_in_albero_relazioni(char element[], relation_tree* root){
   while(root != NULL){
@@ -743,9 +1047,6 @@ relation_tree* cerca_in_albero_relazioni(char element[], relation_tree* root){
 
 int clean_up(relation_tree** root, relation_tree* z){
   relation_tree* y;
-  if (z==NULL){
-    return -1;
-  }
   if (z->left == NULL){
     transplant_rel(root, z, z->right);
   }
@@ -827,12 +1128,12 @@ void del_relation(char name1[], char name2[], char relation[], tree* t, list** l
 
 
 int main(){
-  char line[LINE_LENGTH];
   char name1[NAME];
   char name2[NAME];
   char relation[NAME];
   tree* primary_tree = NULL;
   char *relation_name[MAX_RELATION] = {NULL};
+  char line[LINE_LENGTH];
 
   list* lista_relazioni;
   lista_relazioni = NULL;
@@ -865,12 +1166,27 @@ int main(){
     }
     if (strncmp(line, "report", 6) == 0){
       if (lista_relazioni==NULL){
+        counter++;
+        //printf("=======================================================%d=========================================================\n", counter);
+        //counter++;
         printf("none\n");
       }else{
+        counter++;
+        //printf("  %d- ", counter);
+
+        //aprintf("=======================================================%d=========================================================\n", counter);
+        //print_tree(primary_tree);
+        //astampa_sottoalberi_test(primary_tree);
+
+        //aprintf("\n======\n");
+        //stampa_lista(lista_relazioni);
         mostra(lista_relazioni);
       }
     }
     if (strncmp(line, "end", 3) == 0){
+      //print_tree(primary_tree);
+      //printf("lista: %d, relation_tree: %d, primary_tree: %d, max_list: %d\n", (int) sizeof(list), (int) sizeof(relation_tree), (int) sizeof(tree), (int) sizeof(max_list));
+
       exit(0);
     }
   }
