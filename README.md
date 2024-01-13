@@ -8,4 +8,6 @@ Sviluppo di un algortimo in grado di gestire un social network in cui:
 * una relazione tra due entità può essere rimossa
 * un report della situazione attuale può essere prodotto
 
-Per l'implementazione sono stati utilizzate diverse strutture dati, tra cui alberi binari rosso-neri e liste dinamiche
+Per l'implementazione sono stati utilizzate diverse strutture dati, tra cui alberi binari rosso-neri e liste dinamiche.
+
+La valutazione è interamente basata sulla velocità di esecuzione del codice tramite test automatici.
