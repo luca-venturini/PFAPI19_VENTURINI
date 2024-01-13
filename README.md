@@ -10,4 +10,4 @@ Sviluppo di un algortimo in grado di gestire un social network in cui:
 
 Per l'implementazione sono stati utilizzate diverse strutture dati, tra cui alberi binari rosso-neri e liste dinamiche.
 
-La valutazione è interamente basata sulla velocità di esecuzione del codice tramite test automatici.
+La valutazione è interamente basata sulla velocità di esecuzione del codice e dello spazio occupato, tramite test automatici.
